@@ -1,4 +1,4 @@
-# 🏙️ Reposcape
+# 🌆 Reposcape
 
 Visualize os repositórios do GitHub como uma cidade. Cada prédio é um repo, quanto mais commits, mais alto.
 
