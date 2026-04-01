@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reposcape{% if username %} — @{{ username }}{% else %} — Seed {{ seed }}{% endif %}</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="city-page">
+
+<header class="city-header">
+  <a href="/" class="logo-link">🏙️ Reposcape</a>
+
+  <div class="header-info" id="header-info">
+    {% if username %}
+      <span class="header-username">@{{ username }}</span>
+    {% else %}
+      <span class="header-username">Seed #{{ seed }}</span>
+    {% endif %}
+    <span class="header-sub" id="header-sub">carregando...</span>
+  </div>
+
+  <div class="header-actions">
+    <div class="lang-legend" id="lang-legend"></div>
+    <button class="btn-icon" onclick="newSeed()" title="Nova cidade aleatória">🎲</button>
+    <a href="/" class="btn-icon" title="Voltar">←</a>
+  </div>
+</header>
+
+<!-- Loading -->
+<div class="loading-screen" id="loading">
+  <div class="loading-inner">
+    <div class="loading-anim" id="loading-anim"></div>
+    <p class="loading-text" id="loading-text">Buscando repositórios...</p>
+    <p class="loading-sub" id="loading-sub"></p>
+  </div>
+</div>
+
+<div class="error-screen" id="error-screen" style="display:none">
+  <div class="error-inner">
+    <div class="error-icon">⚠️</div>
+    <p class="error-msg" id="error-text"></p>
+    <a href="/" class="btn-primary">Voltar</a>
+  </div>
+</div>
+
+<!-- City viewport -->
+<div class="city-viewport" id="city-viewport" style="display:none">
+  <div class="city-scroll" id="city-scroll">
+    <div class="city-stage" id="city-stage">
+      <!-- JS -->
+    </div>
+    <div class="ground-strip">
+      <div class="ground-label" id="ground-label"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar" id="filter-bar" style="display:none">
+  <div class="filter-group">
+    <label>Mostrar</label>
+    <select id="filter-sel" onchange="applyFilter()">
+      <option value="all">Todos</option>
+      <option value="original">Originais</option>
+      <option value="forks">Forks</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Ordenar</label>
+    <select id="sort-sel" onchange="applyFilter()">
+      <option value="commits">Commits</option>
+      <option value="stars">Stars</option>
+      <option value="name">Nome</option>
+    </select>
+  </div>
+  <span class="repo-count" id="repo-count"></span>
+</div>
+
+<!-- Tooltip -->
+<div class="building-tooltip" id="tooltip" style="display:none">
+  <div class="tt-name" id="tt-name"></div>
+  <div class="tt-commits" id="tt-commits"></div>
+  <div class="tt-meta" id="tt-meta"></div>
+</div>
+
+<script>
+  const USERNAME = {{ ('"' + username + '"') | safe if username else 'null' }};
+  const SEED     = {{ seed if seed else 'null' }};
+</script>
+<script src="/assets/js/city.js"></script>
+<script src="/assets/js/render.js"></script>
+</body>
+</html>

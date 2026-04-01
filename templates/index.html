@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reposcape</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="home">
+
+<div class="home-wrap">
+  <div class="home-card">
+    <div class="logo">🏙️</div>
+    <h1>Reposcape</h1>
+    <p class="tagline">Seus repositórios do GitHub viram uma cidade.<br>Quanto mais commits, mais alto o prédio.</p>
+
+    <form class="search-form" id="search-form" onsubmit="handleSubmit(event)">
+      <div class="input-row">
+        <span class="at">@</span>
+        <input
+          type="text"
+          id="username-input"
+          placeholder="seu-username"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          maxlength="39"
+        />
+        <button type="submit" id="go-btn">Gerar cidade</button>
+      </div>
+      <div class="error-msg" id="error-msg"></div>
+    </form>
+
+    <div class="divider"><span>ou</span></div>
+
+    <button class="seed-btn" onclick="goSeed()">
+      🎲 Gerar cidade aleatória
+    </button>
+
+    <div class="examples">
+      <span>Experimente:</span>
+      <a href="/city/torvalds">torvalds</a>
+      <a href="/city/gvanrossum">gvanrossum</a>
+      <a href="/city/sindresorhus">sindresorhus</a>
+    </div>
+  </div>
+
+  
+  <div class="bg-city" id="bg-city"></div>
+</div>
+
+<script src="/assets/js/city.js"></script>
+<script>
+  function handleSubmit(e) {
+    e.preventDefault();
+    const val = document.getElementById('username-input').value.trim();
+    if (!val) return;
+    if (!/^[a-zA-Z0-9\-]+$/.test(val)) {
+      showError('Username inválido.');
+      return;
+    }
+    window.location.href = `/city/${val}`;
+  }
+
+  function goSeed() {
+    const seed = Math.floor(Math.random() * 999999);
+    window.location.href = `/seed?s=${seed}`;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  (async () => {
+    const res = await fetch('/api/seed?n=28');
+    const json = await res.json();
+    if (json.ok) drawBgCity(json.data.buildings);
+  })();
+
+  function drawBgCity(buildings) {
+    const container = document.getElementById('bg-city');
+    buildings.sort(() => Math.random() - 0.5);
+    buildings.forEach(b => {
+      const wrap = document.createElement('div');
+      wrap.className = 'bg-building';
+      wrap.style.height = (b.height * 0.55) + 'px';
+      wrap.style.width = b.width + 'px';
+      wrap.style.background = b.color;
+      container.appendChild(wrap);
+    });
+  }
+</script>
+</body>
+</html>
