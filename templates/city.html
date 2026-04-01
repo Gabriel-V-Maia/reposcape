@@ -10,8 +10,7 @@
 
 <header class="city-header">
   <a href="/" class="logo-link">🏙️ Reposcape</a>
-
-  <div class="header-info" id="header-info">
+  <div class="header-info">
     {% if username %}
       <span class="header-username">@{{ username }}</span>
     {% else %}
@@ -19,15 +18,13 @@
     {% endif %}
     <span class="header-sub" id="header-sub">carregando...</span>
   </div>
-
   <div class="header-actions">
     <div class="lang-legend" id="lang-legend"></div>
     <button class="btn-icon" onclick="newSeed()" title="Nova cidade aleatória">🎲</button>
-    <a href="/" class="btn-icon" title="Voltar">←</a>
+    <a href="/" class="btn-icon">← Voltar</a>
   </div>
 </header>
 
-<!-- Loading -->
 <div class="loading-screen" id="loading">
   <div class="loading-inner">
     <div class="loading-anim" id="loading-anim"></div>
@@ -44,51 +41,27 @@
   </div>
 </div>
 
-<!-- City viewport -->
 <div class="city-viewport" id="city-viewport" style="display:none">
-  <div class="city-scroll" id="city-scroll">
-    <div class="city-stage" id="city-stage">
-      <!-- JS -->
+  <div class="control-hint" id="control-hint">
+    <div class="hint-card">
+      <div class="hint-icon">🖱️</div>
+      <p class="hint-title">Clique para explorar a cidade</p>
+      <div class="hint-keys">
+        <div class="key-row"><kbd>W A S D</kbd> mover</div>
+        <div class="key-row"><kbd>Mouse</kbd> olhar</div>
+        <div class="key-row"><kbd>E / Q</kbd> subir / descer</div>
+        <div class="key-row"><kbd>Shift</kbd> correr</div>
+        <div class="key-row"><kbd>Esc</kbd> sair</div>
+      </div>
     </div>
-    <div class="ground-strip">
-      <div class="ground-label" id="ground-label"></div>
-    </div>
   </div>
-</div>
-
-<!-- Filter bar -->
-<div class="filter-bar" id="filter-bar" style="display:none">
-  <div class="filter-group">
-    <label>Mostrar</label>
-    <select id="filter-sel" onchange="applyFilter()">
-      <option value="all">Todos</option>
-      <option value="original">Originais</option>
-      <option value="forks">Forks</option>
-    </select>
-  </div>
-  <div class="filter-group">
-    <label>Ordenar</label>
-    <select id="sort-sel" onchange="applyFilter()">
-      <option value="commits">Commits</option>
-      <option value="stars">Stars</option>
-      <option value="name">Nome</option>
-    </select>
-  </div>
-  <span class="repo-count" id="repo-count"></span>
-</div>
-
-<!-- Tooltip -->
-<div class="building-tooltip" id="tooltip" style="display:none">
-  <div class="tt-name" id="tt-name"></div>
-  <div class="tt-commits" id="tt-commits"></div>
-  <div class="tt-meta" id="tt-meta"></div>
 </div>
 
 <script>
   const USERNAME = {{ ('"' + username + '"') | safe if username else 'null' }};
   const SEED     = {{ seed if seed else 'null' }};
 </script>
-<script src="/assets/js/city.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="/assets/js/render.js"></script>
 </body>
 </html>
