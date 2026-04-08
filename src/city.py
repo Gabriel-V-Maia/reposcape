@@ -33,7 +33,7 @@ RANDOM_NAMES = [
     "titan", "hydra", "phoenix", "cygnus", "draco", "corvus",
 ]
 
-RANDOM_LANGS = list(LANG_COLORS.keys())[:-1]  
+RANDOM_LANGS = list(LANG_COLORS.keys())[:-1]
 
 
 def _lang_color(lang: str) -> str:
@@ -41,38 +41,34 @@ def _lang_color(lang: str) -> str:
 
 
 def _building_width(ratio: float, is_fork: bool) -> int:
-    """Largura do prédio: forks são mais finos."""
     base = 22 if is_fork else 30
     return base + int(ratio * 20)
 
 
 def _building_height(commits: int, max_commits: int) -> int:
-    """
-    Altura usando raiz quadrada para não deixar o repo gigante esmagar os menores.
-    Range: 28px (mínimo visível) até 340px.
-    """
     if max_commits == 0:
         return 28
     ratio = math.sqrt(commits / max_commits)
-    return max(28, int(28 + ratio * 312))
+    return int(28 + ratio * 500)
 
 
 def _windows(width: int, height: int, seed_val: int) -> dict:
-    """Calcula grid de janelas e quais estão acesas."""
     rng = random.Random(seed_val)
     cols = max(1, (width - 8) // 7)
     rows = max(1, (height - 10) // 11)
-    lit = [rng.random() > 0.38 for _ in range(cols * rows)]
+    total = cols * rows
+    lit = [rng.random() > 0.38 for _ in range(total)]
     return {"cols": cols, "rows": rows, "lit": lit}
 
 
 def repos_to_buildings(repos: list[dict]) -> list[dict]:
-    """Converte lista de repos em lista de building dicts prontos para renderização."""
     if not repos:
         return []
 
     max_commits = max((r["commits"] for r in repos), default=1) or 1
+
     buildings = []
+    append = buildings.append
 
     for i, repo in enumerate(repos):
         commits = repo["commits"]
@@ -82,7 +78,7 @@ def repos_to_buildings(repos: list[dict]) -> list[dict]:
         color = _lang_color(repo.get("language", "Unknown"))
         seed_val = int(hashlib.md5(repo["name"].encode()).hexdigest(), 16) % 99999
 
-        buildings.append({
+        append({
             "name": repo["name"],
             "commits": commits,
             "stars": repo.get("stars", 0),
@@ -103,16 +99,11 @@ def repos_to_buildings(repos: list[dict]) -> list[dict]:
 
 
 def generate_seed_city(seed: Optional[int] = None, n_buildings: int = 20) -> dict:
-    """
-    Gera uma cidade fictícia aleatória para demo.
-    Retorna o mesmo formato que repos_to_buildings.
-    """
     if seed is None:
         seed = random.randint(0, 999_999)
 
     rng = random.Random(seed)
 
-  
     def rand_commits():
         r = rng.random()
         if r > 0.85:
@@ -123,6 +114,7 @@ def generate_seed_city(seed: Optional[int] = None, n_buildings: int = 20) -> dic
 
     repos = []
     used_names = set()
+
     for _ in range(n_buildings):
         name_base = rng.choice(RANDOM_NAMES)
         suffix = rng.choice(["", "-api", "-app", "-lib", "-cli", "-web", "-core", "-ui"])
@@ -156,7 +148,6 @@ def generate_seed_city(seed: Optional[int] = None, n_buildings: int = 20) -> dic
 
 
 def city_from_github(data: dict) -> dict:
-    """Prepara dados vindos de github.fetch_city_data para renderização."""
     repos = data["repos"]
     buildings = repos_to_buildings(repos)
     return {
@@ -173,10 +164,13 @@ def city_from_github(data: dict) -> dict:
 
 def _top_langs(repos: list[dict], top_n: int = 5) -> list[dict]:
     counts: dict[str, int] = {}
+
     for r in repos:
         lang = r.get("language", "Unknown") or "Unknown"
         counts[lang] = counts.get(lang, 0) + 1
+
     sorted_langs = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+
     return [
         {"name": l, "count": c, "color": _lang_color(l)}
         for l, c in sorted_langs[:top_n]
