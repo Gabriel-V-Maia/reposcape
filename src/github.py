@@ -1,12 +1,12 @@
 import requests
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 GITHUB_API = "https://api.github.com"
 HEADERS = {"Accept": "application/vnd.github+json"}
 
 
 def get_user(username: str) -> dict:
-    """Retorna info básica do usuário. Lança ValueError se não existir."""
     resp = requests.get(f"{GITHUB_API}/users/{username}", headers=HEADERS, timeout=10)
     if resp.status_code == 404:
         raise ValueError(f"Usuário '{username}' não encontrado no GitHub.")
@@ -17,12 +17,9 @@ def get_user(username: str) -> dict:
 
 
 def get_repos(username: str, max_repos: int = 60) -> list[dict]:
-    """
-    Retorna lista de repositórios públicos do usuário.
-    Já exclui repos sem atividade (size=0) e traz no máx. max_repos.
-    """
     repos = []
     page = 1
+
     while len(repos) < max_repos:
         resp = requests.get(
             f"{GITHUB_API}/users/{username}/repos",
@@ -30,14 +27,19 @@ def get_repos(username: str, max_repos: int = 60) -> list[dict]:
             params={"per_page": 100, "page": page, "sort": "pushed"},
             timeout=10,
         )
+
         if resp.status_code == 403:
             raise RuntimeError("Rate limit atingido.")
+
         resp.raise_for_status()
         data = resp.json()
+
         if not data:
             break
+
         repos.extend(data)
         page += 1
+
         if len(data) < 100:
             break
 
@@ -45,16 +47,13 @@ def get_repos(username: str, max_repos: int = 60) -> list[dict]:
 
 
 def get_commit_count(username: str, repo_name: str) -> int:
-    """
-    Conta commits de um repo usando o endpoint de contributors (mais rápido).
-    Cai pro endpoint de commits com paginação como fallback.
-    """
     resp = requests.get(
         f"{GITHUB_API}/repos/{username}/{repo_name}/contributors",
         headers=HEADERS,
         params={"per_page": 100, "anon": "true"},
         timeout=10,
     )
+
     if resp.status_code == 200:
         data = resp.json()
         if isinstance(data, list) and data:
@@ -66,10 +65,12 @@ def get_commit_count(username: str, repo_name: str) -> int:
         params={"per_page": 1},
         timeout=10,
     )
+
     if resp.status_code != 200:
         return 0
 
     link = resp.headers.get("Link", "")
+
     if 'rel="last"' in link:
         import re
         m = re.search(r'page=(\d+)>; rel="last"', link)
@@ -80,21 +81,33 @@ def get_commit_count(username: str, repo_name: str) -> int:
     return len(data) if isinstance(data, list) else 0
 
 
-def fetch_city_data(username: str) -> dict:
-    """
-    Ponto de entrada principal.
-    Retorna { user: {...}, repos: [ {name, commits, stars, language, ...} ] }
-    """
+def fetch_city_data(username: str, max_workers: int = 12) -> dict:
     user = get_user(username)
     raw_repos = get_repos(username)
 
     buildings = []
+    results = {}
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(get_commit_count, username, repo["name"]): repo
+            for repo in raw_repos
+        }
+
+        for future in as_completed(futures):
+            repo = futures[future]
+            try:
+                count = future.result()
+            except Exception:
+                count = 0
+
+            results[repo["name"]] = count
+
     for repo in raw_repos:
         name = repo["name"]
-        count = get_commit_count(username, name)
         buildings.append({
             "name": name,
-            "commits": count,
+            "commits": results.get(name, 0),
             "stars": repo.get("stargazers_count", 0),
             "language": repo.get("language") or "Unknown",
             "description": repo.get("description") or "",
